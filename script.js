@@ -2,20 +2,26 @@ const canvas = document.getElementById("canvas");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 const c = canvas.getContext("2d");
-let start = true;
+
+let START = true;
+
+//PLAYER
 let LEFT = false,
   RIGHT = false,
   UP = false,
   DOWN = false,
   SHOOT = false,
-  keyAllowed = {},
-  bullets = [],
-  alive = true,
+  BULLETS = [],
+  ALIVE = true,
+  SPEED = 2,
+  STOPPED = true,
   particles = [],
-  speed = 2,
-  stopped = true;
+  keyAllowed = {};
 
+//ENEMIES
 let enemies = [],
+  x,
+  y,
   explosions = [];
 
 onkeydown = (e) => {
@@ -23,7 +29,7 @@ onkeydown = (e) => {
   else if (e.keyCode == 39) RIGHT = true;
   else if (e.keyCode == 38) {
     UP = true;
-    stopped = false;
+    STOPPED = false;
   } else if (e.keyCode == 40) DOWN = true;
   else if (e.keyCode == 32) {
     if (keyAllowed[e.which] === false) return;
@@ -34,7 +40,7 @@ onkeydown = (e) => {
 onkeyup = (e) => {
   if (e.keyCode == 37) LEFT = false;
   else if (e.keyCode == 39) RIGHT = false;
-  else if (e.keyCode == 38) stopped = true;
+  else if (e.keyCode == 38) STOPPED = true;
   else if (e.keyCode == 40) DOWN = false;
   else if (e.keyCode == 32) keyAllowed[e.which] = true;
 };
@@ -98,19 +104,19 @@ class Player {
   update() {
     if (LEFT) {
       this.deg -= (Math.PI / 180) * this.rt_speed;
-      if (speed >= 6) {
-        speed -= 0.075;
+      if (SPEED >= 6) {
+        SPEED -= 0.075;
       }
     }
     if (RIGHT) {
       this.deg += (Math.PI / 180) * this.rt_speed;
-      if (speed >= 6) {
-        speed -= 0.075;
+      if (SPEED >= 6) {
+        SPEED -= 0.075;
       }
     }
     if (UP) {
-      this.x += speed * Math.cos(this.deg);
-      this.y += speed * Math.sin(this.deg);
+      this.x += SPEED * Math.cos(this.deg);
+      this.y += SPEED * Math.sin(this.deg);
       if (this.x > canvas.width + this.size) {
         this.x = -this.size;
       } else if (this.x < -this.size) {
@@ -121,8 +127,8 @@ class Player {
       } else if (this.y < -this.size) {
         this.y = canvas.height + this.size;
       }
-      if (speed <= 8 && !stopped) {
-        speed += this.velocity;
+      if (SPEED <= 8 && !STOPPED) {
+        SPEED += this.velocity;
         this.velocity += 0.01;
       }
       for (let i = 0; i < 3; i++) {
@@ -136,16 +142,15 @@ class Player {
         );
         particles.push(particle);
       }
-      if (stopped) {
+      if (STOPPED) {
         this.velocity = 0.15;
-        speed -= this.velocity;
-        console.log(123);
-        if (speed < 1) {
+        SPEED -= this.velocity;
+        if (SPEED < 1) {
           UP = false;
         }
       }
     } else {
-      speed = 2;
+      SPEED = 2;
       this.velocity = 0.05;
     }
 
@@ -188,9 +193,9 @@ class Player {
         }
         enemies.splice(i, 1);
         setTimeout(() => {
-          start = false;
+          START = false;
         }, 2000);
-        alive = false;
+        ALIVE = false;
       }
     });
 
@@ -205,20 +210,20 @@ class Player {
         3,
         15
       );
-      bullets.push(bullet);
+      BULLETS.push(bullet);
       setTimeout(() => {
         SHOOT = false;
       }, 5);
     }
-    for (var i = bullets.length - 1; i >= 0; i--) {
-      var blt = bullets[i];
+    for (var i = BULLETS.length - 1; i >= 0; i--) {
+      var blt = BULLETS[i];
       if (
         blt.x < 0 ||
         blt.x > canvas.widht ||
         blt.y < 0 ||
         blt.y > canvas.height
       ) {
-        bullets.splice(i, 1);
+        BULLETS.splice(i, 1);
       }
       blt.update();
     }
@@ -245,7 +250,7 @@ class Bullet {
     this.draw();
 
     enemies.forEach((e, i) => {
-      bullets.forEach((b) => {
+      BULLETS.forEach((b) => {
         if (distance(b.x, b.y, b.size, e.x, e.y, e.size)) {
           if (e.size === 120) {
             for (let i = 0; i < 2; i++) {
@@ -271,7 +276,7 @@ class Bullet {
             explosions.push(explosion);
           }
           enemies.splice(i, 1);
-          bullets.splice(bullets.indexOf(b), 1);
+          BULLETS.splice(BULLETS.indexOf(b), 1);
         }
       });
     });
@@ -383,7 +388,7 @@ class Explosion {
     this.speed_x = speed_x;
     this.speed_y = speed_y;
     this.size = size;
-    this.speed = speed;
+    this.speed = SPEED;
     this.decrease = decrease;
   }
   draw() {
@@ -411,7 +416,6 @@ class Explosion {
 
 const player = new Player(canvas.width / 2, canvas.height / 2, 0, 6, 20);
 
-let x, y;
 for (let i = 0; i < 5; i++) {
   if (Math.random < 0.5) {
     x = Math.random() < 0.5 ? 0 - 120 : canvas.width + 120;
@@ -427,18 +431,18 @@ for (let i = 0; i < 5; i++) {
 
 function animateGame() {
   requestAnimationFrame(animateGame);
-  if (!start) {
-    stopped = true;
+  if (!START) {
+    STOPPED = true;
     UP = false;
     enemies = [];
-    start = true;
-    alive = true;
-    bullets = [];
+    START = true;
+    ALIVE = true;
+    BULLETS = [];
     player.x = canvas.width / 2;
     player.y = canvas.height / 2;
     player.deg = 0;
 
-    if (enemies.length === 0 && alive) {
+    if (enemies.length === 0 && ALIVE) {
       for (let i = 0; i < 4; i++) {
         if (Math.random < 0.5) {
           x = Math.random() < 0.5 ? 0 - 120 : canvas.width + 120;
@@ -455,7 +459,7 @@ function animateGame() {
   }
   c.clearRect(0, 0, canvas.width, canvas.height);
 
-  if (enemies.length < 3 && alive) {
+  if (enemies.length < 3 && ALIVE) {
     if (Math.random < 0.5) {
       x = Math.random() < 0.5 ? 0 - 120 : canvas.width + 120;
       y = Math.random * canvas.height;
@@ -466,8 +470,10 @@ function animateGame() {
     const enemy = new Enemy(x, y, 0, 120);
     enemies.push(enemy);
   }
-  alive && player.update();
-  alive && player.shoot();
+
+  ALIVE && player.update();
+  ALIVE && player.shoot();
+
   particles.forEach((p) => {
     p.update();
   });

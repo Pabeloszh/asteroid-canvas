@@ -3,7 +3,58 @@
   margin: 0;
 }
 
-/* #canvas {
+body {
+  overflow-x: hidden;
+}
+
+.header {
+  position: relative;
+}
+
+#up {
+  grid-area: up;
+}
+#left {
+  grid-area: left;
+}
+#bot {
+  grid-area: bot;
+}
+#right {
+  grid-area: right;
+}
+#space {
+  grid-area: space;
+}
+
+.key-container {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  display: grid;
+  grid-template-columns: 50px 50px 50px;
+  grid-template-rows: 50px 50px 50px;
+  grid-template-areas: ". up ." "left bot right" "space space space";
+  column-gap: 10px;
+  row-gap: 10px;
+  margin: 0 30px 30px 0;
+}
+
+.key-container > div {
+  background-color: black;
+  color: white;
+  border-radius: 5px;
   width: 100%;
-  height: 100vh;
-} */
+  height: 100%;
+  position: relative;
+}
+i,
+h3 {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+i {
+  font-size: 24px;
+}
