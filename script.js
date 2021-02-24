@@ -27,20 +27,18 @@ let enemies = [],
 onkeydown = (e) => {
   if (e.keyCode == 37) LEFT = true;
   else if (e.keyCode == 39) RIGHT = true;
-  else if (e.keyCode == 38) {
-    UP = true;
-    STOPPED = false;
-  } else if (e.keyCode == 40) DOWN = true;
+  else if (e.keyCode == 38) UP = true;
+  else if (e.keyCode == 40) DOWN = true;
   else if (e.keyCode == 32) {
     if (keyAllowed[e.which] === false) return;
     keyAllowed[e.which] = false;
-    SHOOT = true;
+    SHOOT = true; 
   }
 };
 onkeyup = (e) => {
   if (e.keyCode == 37) LEFT = false;
   else if (e.keyCode == 39) RIGHT = false;
-  else if (e.keyCode == 38) STOPPED = true;
+  else if (e.keyCode == 38) UP = false;
   else if (e.keyCode == 40) DOWN = false;
   else if (e.keyCode == 32) keyAllowed[e.which] = true;
 };
@@ -52,106 +50,117 @@ document.onfocus = (e) => {
 const distance = (x1, y1, s1, x2, y2, s2) => {
   if (
     /*square hitboxes */
-    (x1 + s1 >= x2 && x1 <= x2 + s2 && y1 + s1 >= y2 && y1 <= y2 + s2) ||
-    /*horizonta*/
-    (x1 + s1 >= x2 - s2 / 2 &&
-      x1 <= x2 + s2 + s2 / 2 &&
-      y1 + s1 < y2 + 10 &&
-      y1 > y2 - 10) ||
-    (x1 + s1 >= x2 - s2 / 2 &&
-      x1 <= x2 + s2 + s2 / 2 &&
-      y1 + s1 < y2 + s2 + 10 &&
-      y1 > y2 + s2 - 10) ||
-    /*vertical*/
-    (x1 + s1 >= x2 - 10 &&
-      x1 <= x2 + 10 &&
-      y1 + s1 > y2 - s2 / 2 &&
-      y1 < y2 + s2 / 2) ||
-    (x1 + s1 >= x2 + s2 - 10 &&
-      x1 <= x2 + s2 + 10 &&
-      y1 + s1 > y2 - s2 / 2 &&
-      y1 < y2 + s2 / 2)
+    (x1 + s1 >= x2 && x1 <= x2 + s2 && y1 + s1 >= y2 && y1 <= y2 + s2)
+    // /*horizontal*/
+    // (x1 + s1 >= x2 - s2 / 2 &&
+    //   x1 <= x2 + s2 + s2 / 2 &&
+    //   y1 + s1 < y2 + 10 &&
+    //   y1 > y2 - 10) ||
+    // (x1 + s1 >= x2 - s2 / 2 &&
+    //   x1 <= x2 + s2 + s2 / 2 &&
+    //   y1 + s1 < y2 + s2 + 10 &&
+    //   y1 > y2 + s2 - 10) ||
+    // /*vertical*/
+    // (x1 + s1 >= x2 - 10 &&
+    //   x1 <= x2 + 10 &&
+    //   y1 + s1 > y2 - s2 / 2 &&
+    //   y1 < y2 + s2 / 2) ||
+    // (x1 + s1 >= x2 + s2 - 10 &&
+    //   x1 <= x2 + s2 + 10 &&
+    //   y1 + s1 > y2 - s2 / 2 &&  
+    //   y1 < y2 + s2 / 2)
   ) {
     return true;
   }
 };
 
+var friction = 0.01;
+
 class Player {
-  constructor(x, y, deg, rotation_speed, size) {
+  constructor(x, y, size) {
     this.x = x;
     this.y = y;
-    this.deg = deg;
-    this.rt_speed = rotation_speed;
-    this.velocity = 0.05;
+    this.vx = 0; 
+    this.vy = 0;
+	  this.ax = 0;
+    this.ay = 0;
+	  this.r =  0;
     this.size = size;
-    this.center = [];
   }
   draw() {
     c.save();
-    c.translate(this.x + this.size, this.y + this.size / 2);
-    c.rotate(this.deg);
-    c.translate(-(this.x + this.size), -(this.y + this.size / 2));
+    c.translate(this.x + this.size / 2 , this.y + this.size / 2);
+    c.rotate(this.r);
+    c.translate(-(this.x + this.size/ 2), -(this.y + this.size / 2));
     c.beginPath();
+    c.lineWidth = (Math.random() > 0.9) ? 2 : 1;
     c.moveTo(this.x, this.y);
     c.lineTo(this.x + this.size, this.y + this.size / 2); //góra
     c.lineTo(this.x, this.y + this.size); //dol
     c.lineTo(this.x, this.y); //lewo
-
     c.stroke();
     c.closePath();
     c.restore();
   }
   update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    var speedd = Math.sqrt(this.vx * this.vx + this.vy * this.vy)
+		var angle = Math.atan2(this.vy, this.vx);
+
+    if(speedd > friction){
+      speedd -= friction;
+    } else {
+      speedd = 0;
+    }
+    if(speedd > 8) speedd = 8;
+
+    this.vx = Math.cos(angle) * speedd;
+    this.vy = Math.sin(angle) * speedd;
+    
+    if (this.x > canvas.width + this.size) {
+      this.x = -this.size;
+    } else if (this.x < -this.size) {
+      this.x = canvas.width + this.size;
+    }
+    if (this.y > canvas.height + this.size) {
+      this.y = -this.size;
+    } else if (this.y < -this.size) {
+      this.y = canvas.height + this.size;
+    }
+
     if (LEFT) {
-      this.deg -= (Math.PI / 180) * this.rt_speed;
-      if (SPEED >= 6) {
-        SPEED -= 0.075;
-      }
-    }
+      this.r -= 0.05;
+    } 
+
     if (RIGHT) {
-      this.deg += (Math.PI / 180) * this.rt_speed;
-      if (SPEED >= 6) {
-        SPEED -= 0.075;
-      }
+      this.r += 0.05;
     }
+
     if (UP) {
-      this.x += SPEED * Math.cos(this.deg);
-      this.y += SPEED * Math.sin(this.deg);
-      if (this.x > canvas.width + this.size) {
-        this.x = -this.size;
-      } else if (this.x < -this.size) {
-        this.x = canvas.width + this.size;
-      }
-      if (this.y > canvas.height + this.size) {
-        this.y = -this.size;
-      } else if (this.y < -this.size) {
-        this.y = canvas.height + this.size;
-      }
-      if (SPEED <= 8 && !STOPPED) {
-        SPEED += this.velocity;
-        this.velocity += 0.01;
-      }
-      for (let i = 0; i < 3; i++) {
+      this.vx += this.ax;
+      this.vy += this.ay;
+      this.ax = Math.cos(this.r) * 0.05;
+      this.ay = Math.sin(this.r) * 0.05;
+      
+
+      
+
+      for (let i = 0; i < 2; i++) {
         const particle = new Particle(
-          this.x + this.size,
-          this.y + this.size / 2,
-          this.deg,
+          this.x + this.size/2 + Math.cos(this.r) *-Math.round(Math.random()*14+10),
+          this.y + this.size / 2 + Math.sin(this.r) *-Math.round(Math.random()*14+10),
+          this.r,
           5,
           8,
-          Math.random() * 2
+          Math.random() * 2 + 0.2
         );
         particles.push(particle);
       }
-      if (STOPPED) {
-        this.velocity = 0.15;
-        SPEED -= this.velocity;
-        if (SPEED < 1) {
-          UP = false;
-        }
-      }
+ 
     } else {
-      SPEED = 2;
-      this.velocity = 0.05;
+      this.ax = this.ay = 0;
+      speedd = 0;
     }
 
     enemies.forEach((e, i) => {
@@ -195,18 +204,20 @@ class Player {
         setTimeout(() => {
           START = false;
         }, 2000);
-        ALIVE = false;
+        // ALIVE = false;
+        console.log(123);
       }
     });
 
     this.draw();
   }
+  
   shoot() {
-    if (SHOOT) {
+    if (SHOOT) { 
       const bullet = new Bullet(
         this.x + this.size,
         this.y + this.size / 2,
-        this.deg,
+        this.r,
         3,
         15
       );
@@ -313,8 +324,8 @@ class Particle {
 
 class Enemy {
   constructor(x, y, deg, size) {
-    this.x = x;
-    this.y = y;
+    this.x = canvas.width/4;
+    this.y = canvas.height/4;
     this.speed_x = 1 * (Math.round(Math.random()) ? 1 : -1);
     this.speed_y = 1 * (Math.round(Math.random()) ? 1 : -1);
     this.deg = deg;
@@ -323,25 +334,25 @@ class Enemy {
     this.hashOffSet = 2;
   }
   draw() {
-    if (
-      enemies[enemies.length - 1].speed_x *
-        enemies[enemies.length - 2].speed_x ===
-      1
-    ) {
-      enemies[enemies.length - 1].speed_x * -1;
-    }
-    if (
-      enemies[enemies.length - 1].speed_y *
-        enemies[enemies.length - 2].speed_y ===
-      1
-    ) {
-      enemies[enemies.length - 1].speed_y * -1;
-    }
+    // if (
+    //   enemies[enemies.length - 1].speed_x *
+    //     enemies[enemies.length - 2].speed_x ===
+    //   1
+    // ) {
+    //   enemies[enemies.length - 1].speed_x * -1;
+    // }
+    // if (
+    //   enemies[enemies.length - 1].speed_y *
+    //     enemies[enemies.length - 2].speed_y ===
+    //   1
+    // ) {
+    //   enemies[enemies.length - 1].speed_y * -1;
+    // }
     c.save();
     c.beginPath();
     c.fillStyle = "black";
     c.lineWidth = 20;
-    c.lineCap = "round";
+    // c.lineCap = "round";
     c.translate(this.x + this.size / 2, this.y + this.size / 2);
     c.rotate(this.deg);
     c.translate(-(this.x + this.size / 2), -(this.y + this.size / 2));
@@ -365,8 +376,9 @@ class Enemy {
   }
   update() {
     this.deg += this.rotate;
-    this.x = this.x + this.speed_x;
-    this.y = this.y + this.speed_y;
+    console.log(this.x + Math.cos(this.deg)*-10 , this.y + Math.sin(this.deg)*-10);
+    // this.x = this.x + this.speed_x;
+    // this.y = this.y + this.speed_y;
     if (this.x > canvas.width + this.size) {
       this.x = -this.size;
     } else if (this.x < -this.size) {
@@ -414,9 +426,9 @@ class Explosion {
   }
 }
 
-const player = new Player(canvas.width / 2, canvas.height / 2, 0, 6, 20);
+const player = new Player(canvas.width / 2, canvas.height / 2, 20);
 
-for (let i = 0; i < 5; i++) {
+for (let i = 0; i < 1; i++) {
   if (Math.random < 0.5) {
     x = Math.random() < 0.5 ? 0 - 120 : canvas.width + 120;
     y = Math.random * canvas.height;
@@ -440,36 +452,35 @@ function animateGame() {
     BULLETS = [];
     player.x = canvas.width / 2;
     player.y = canvas.height / 2;
-    player.deg = 0;
 
-    if (enemies.length === 0 && ALIVE) {
-      for (let i = 0; i < 4; i++) {
-        if (Math.random < 0.5) {
-          x = Math.random() < 0.5 ? 0 - 120 : canvas.width + 120;
-          y = Math.random * canvas.height;
-        } else {
-          x = Math.random() * canvas.width;
-          y = Math.random() < 0.5 ? 0 - 120 : canvas.height + 120;
-        }
+    // if (enemies.length === 0 && ALIVE) {
+    //   for (let i = 0; i < 4; i++) {
+    //     if (Math.random < 0.5) {
+    //       x = Math.random() < 0.5 ? 0 - 120 : canvas.width + 120;
+    //       y = Math.random * canvas.height;
+    //     } else {
+    //       x = Math.random() * canvas.width;
+    //       y = Math.random() < 0.5 ? 0 - 120 : canvas.height + 120;
+    //     }
 
-        const enemy = new Enemy(x, y, 0, 120);
-        enemies.push(enemy);
-      }
-    }
+    //     const enemy = new Enemy(x, y, 0, 120);
+    //     enemies.push(enemy);
+    //   }
+    // }
   }
   c.clearRect(0, 0, canvas.width, canvas.height);
 
-  if (enemies.length < 3 && ALIVE) {
-    if (Math.random < 0.5) {
-      x = Math.random() < 0.5 ? 0 - 120 : canvas.width + 120;
-      y = Math.random * canvas.height;
-    } else {
-      x = Math.random() * canvas.width;
-      y = Math.random() < 0.5 ? 0 - 120 : canvas.height + 120;
-    }
-    const enemy = new Enemy(x, y, 0, 120);
-    enemies.push(enemy);
-  }
+  // if (enemies.length < 3 && ALIVE) {
+  //   if (Math.random < 0.5) {
+  //     x = Math.random() < 0.5 ? 0 - 120 : canvas.width + 120;
+  //     y = Math.random * canvas.height;
+  //   } else {
+  //     x = Math.random() * canvas.width;
+  //     y = Math.random() < 0.5 ? 0 - 120 : canvas.height + 120;
+  //   }
+  //   const enemy = new Enemy(x, y, 0, 120);
+  //   enemies.push(enemy);
+  // }
 
   ALIVE && player.update();
   ALIVE && player.shoot();
