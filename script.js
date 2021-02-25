@@ -70,29 +70,6 @@ const distance = (x1, y1, s1, x2, y2, s2) => {
   if (
     dis_x * dis_x + dis_y * dis_y <=
     radii_sum * radii_sum
-    /*square hitboxes */
-    // x1 + s1 >= x2 &&
-    // x1 <= x2 + s2 &&
-    // y1 + s1 >= y2 &&
-    // y1 <= y2 + s2
-    // /*horizontal*/
-    // (x1 + s1 >= x2 - s2 / 2 &&
-    //   x1 <= x2 + s2 + s2 / 2 &&
-    //   y1 + s1 < y2 + 10 &&
-    //   y1 > y2 - 10) ||
-    // (x1 + s1 >= x2 - s2 / 2 &&
-    //   x1 <= x2 + s2 + s2 / 2 &&
-    //   y1 + s1 < y2 + s2 + 10 &&
-    //   y1 > y2 + s2 - 10) ||
-    // /*vertical*/
-    // (x1 + s1 >= x2 - 10 &&
-    //   x1 <= x2 + 10 &&
-    //   y1 + s1 > y2 - s2 / 2 &&
-    //   y1 < y2 + s2 / 2) ||
-    // (x1 + s1 >= x2 + s2 - 10 &&
-    //   x1 <= x2 + s2 + 10 &&
-    //   y1 + s1 > y2 - s2 / 2 &&
-    //   y1 < y2 + s2 / 2)
   ) {
     return true;
   }
@@ -117,9 +94,9 @@ class Player {
     c.beginPath();
     c.lineWidth = Math.random() > 0.9 ? 2 : 1;
     c.moveTo(this.x, this.y);
-    c.lineTo(this.x + this.size, this.y + this.size / 2); //góra
-    c.lineTo(this.x, this.y + this.size); //dol
-    c.lineTo(this.x, this.y); //lewo
+    c.lineTo(this.x + this.size, this.y + this.size / 2); //top
+    c.lineTo(this.x, this.y + this.size); //bot
+    c.lineTo(this.x, this.y); //left
     c.stroke();
     c.closePath();
     c.restore();
@@ -225,10 +202,6 @@ class Player {
           explosions.push(explosion);
         }
         enemies.splice(i, 1);
-
-        // setTimeout(() => {
-        //   START = false;
-        // }, 2000);
         ALIVE = false;
       }
     });
@@ -370,21 +343,6 @@ class Enemy {
     c.translate(this.x, this.y);
     c.rotate(this.deg);
     c.translate(-this.x, -this.y);
-    // c.lineCap = "round";
-    // c.moveTo(this.x, this.y - this.size / this.hashOffSet);
-    // c.lineTo(this.x, this.y + this.size + this.size / this.hashOffSet);
-    // c.moveTo(this.x + this.size, this.y - this.size / this.hashOffSet);
-    // c.lineTo(
-    //   this.x + this.size,
-    //   this.y + this.size + this.size / this.hashOffSet
-    // );
-    // c.moveTo(this.x - this.size / this.hashOffSet, this.y);
-    // c.lineTo(this.x + this.size + this.size / this.hashOffSet, this.y);
-    // c.moveTo(this.x - this.size / this.hashOffSet, this.y + this.size);
-    // c.lineTo(
-    //   this.x + this.size + this.size / this.hashOffSet,
-    //   this.y + this.size
-    // );
     c.moveTo(
       this.x + this.size * Math.cos(0),
       this.y + this.size * Math.sin(0)
@@ -547,9 +505,6 @@ function animateGame() {
   });
   score.innerHTML = `SCORE: ${SCORE}`;
   score_over.innerHTML = `SCORE: ${SCORE}`
-  // document
-  //     .querySelector("#score-board")
-  //     .appendChild(document.createTextNode(`score: ${SCORE}`));
 }
 
 animateGame();
