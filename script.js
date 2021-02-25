@@ -212,8 +212,12 @@ class Player {
   shoot() {
     if (SHOOT) {
       const bullet = new Bullet(
-        this.x + this.size,
-        this.y + this.size / 2,
+        this.x +
+            this.size / 2 +
+            Math.cos(this.r) * -1,
+          this.y +
+            this.size / 2 +
+            Math.sin(this.r) * -1,
         this.r,
         3,
         15
