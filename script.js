@@ -3,7 +3,24 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 const c = canvas.getContext("2d");
 
-let START = true;
+window.addEventListener("resize", ()=>{
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+})
+
+let START = true,
+SCORE = 0;
+
+const score = document.getElementById("score");
+const score_over = document.getElementById("score-over");
+
+setInterval(()=>{
+  if( document.getElementById('again').style.display === "block" && document.getElementById('info-over').style.display === "block"){
+    document.getElementById('again').style.display = "none";
+  } else { 
+    document.getElementById('again').style.display = "block";
+  }
+},500)
 
 //PLAYER
 let LEFT = false,
@@ -13,8 +30,7 @@ let LEFT = false,
   SHOOT = false,
   BULLETS = [],
   ALIVE = true,
-  SPEED = 2,
-  STOPPED = true,
+  FRICTION = 0.01,
   particles = [],
   keyAllowed = {};
 
@@ -82,8 +98,6 @@ const distance = (x1, y1, s1, x2, y2, s2) => {
   }
 };
 
-var friction = 0.01;
-
 class Player {
   constructor(x, y, size) {
     this.x = x;
@@ -113,18 +127,18 @@ class Player {
   update() {
     this.x += this.vx;
     this.y += this.vy;
-    var speedd = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-    var angle = Math.atan2(this.vy, this.vx);
+    let SPEED = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+    let ANGLE = Math.atan2(this.vy, this.vx);
 
-    if (speedd > friction) {
-      speedd -= friction;
+    if (SPEED > FRICTION) {
+      SPEED -= FRICTION;
     } else {
-      speedd = 0;
+      SPEED = 0;
     }
-    if (speedd > 8) speedd = 8;
+    if (SPEED > 8) SPEED = 8;
 
-    this.vx = Math.cos(angle) * speedd;
-    this.vy = Math.sin(angle) * speedd;
+    this.vx = Math.cos(ANGLE) * SPEED;
+    this.vy = Math.sin(ANGLE) * SPEED;
 
     if (this.x > canvas.width + this.size) {
       this.x = -this.size;
@@ -168,7 +182,7 @@ class Player {
       }
     } else {
       this.ax = this.ay = 0;
-      speedd = 0;
+      SPEED = 0;
     }
 
     enemies.forEach((e, i) => {
@@ -183,6 +197,7 @@ class Player {
               5
             );
             enemies.push(enemy);
+            
           }
         }
         if (e.size === 90) {
@@ -195,6 +210,7 @@ class Player {
               5
             );
             enemies.push(enemy);
+              
           }
         }
         for (let j = 0; j < 32; j++) {
@@ -209,9 +225,10 @@ class Player {
           explosions.push(explosion);
         }
         enemies.splice(i, 1);
-        setTimeout(() => {
-          START = false;
-        }, 2000);
+
+        // setTimeout(() => {
+        //   START = false;
+        // }, 2000);
         ALIVE = false;
       }
     });
@@ -266,7 +283,6 @@ class Bullet {
     this.x += this.speed * Math.cos(this.deg);
     this.y += this.speed * Math.sin(this.deg);
     this.draw();
-
     enemies.forEach((e, i) => {
       BULLETS.forEach((b) => {
         if (distance(b.x, b.y, b.size, e.x, e.y, e.size)) {
@@ -275,17 +291,22 @@ class Bullet {
               const enemy = new Enemy(b.x, b.y, 0, 90, 5);
               enemies.push(enemy);
             }
+            SCORE +=60
           }
           if (e.size === 90) {
             for (let i = 0; i < 2; i++) {
               const enemy = new Enemy(b.x, b.y, 0, 60, 5);
               enemies.push(enemy);
             }
+            SCORE +=90
+          }
+          if (e.size === 60) {
+            SCORE += 120;
           }
           for (let j = 0; j < 32; j++) {
             const explosion = new Explosion(
-              e.x + e.size / 2,
-              e.y + e.size / 2,
+              b.x,
+              b.y,
               5,
               (Math.round(Math.random()) ? 1 : -1) * Math.random() * 3 + 1,
               (Math.round(Math.random()) ? 1 : -1) * Math.random() * 3 + 1,
@@ -342,28 +363,14 @@ class Enemy {
     this.a = (2 * Math.PI) / 6;
   }
   draw() {
-    // if (
-    //   enemies[enemies.length - 1].speed_x *
-    //     enemies[enemies.length - 2].speed_x ===
-    //   1
-    // ) {
-    //   enemies[enemies.length - 1].speed_x * -1;
-    // }
-    // if (
-    //   enemies[enemies.length - 1].speed_y *
-    //     enemies[enemies.length - 2].speed_y ===
-    //   1
-    // ) {
-    //   enemies[enemies.length - 1].speed_y * -1;
-    // }
     c.save();
     c.beginPath();
     c.fillStyle = "black";
     c.lineWidth = 20;
-    // c.lineCap = "round";
     c.translate(this.x, this.y);
     c.rotate(this.deg);
     c.translate(-this.x, -this.y);
+    // c.lineCap = "round";
     // c.moveTo(this.x, this.y - this.size / this.hashOffSet);
     // c.lineTo(this.x, this.y + this.size + this.size / this.hashOffSet);
     // c.moveTo(this.x + this.size, this.y - this.size / this.hashOffSet);
@@ -389,7 +396,6 @@ class Enemy {
         this.y + this.size * Math.sin((side * 2 * Math.PI) / 6)
       );
     }
-    console.log(this.x + this.size);
     c.strokeStyle = "#000000";
     c.lineWidth = Math.random() > 0.9 ? 2 : 1;
     c.stroke();
@@ -421,7 +427,7 @@ class Explosion {
     this.speed_x = speed_x;
     this.speed_y = speed_y;
     this.size = size;
-    this.speed = SPEED;
+    this.speed = 6;
     this.decrease = decrease;
   }
   draw() {
@@ -442,7 +448,8 @@ class Explosion {
     else this.speed_x += 0.02;
     if (this.speed_y > 0) this.speed_y -= 0.02;
     else this.speed_y += 0.02;
-    this.size -= 0.05;
+
+    if (this.size > 0.05) this.size -= 0.05;
     this.draw();
   }
 }
@@ -464,13 +471,23 @@ for (let i = 0; i < 7; i++) {
 
 function animateGame() {
   requestAnimationFrame(animateGame);
+  if(SHOOT && !ALIVE){
+    setTimeout(()=>{START = false;},1000);
+  }
+  if(!ALIVE){
+    document.getElementById('info-over').style.display = "block";
+    score.style.display = "none"
+  } else {
+    document.getElementById('info-over').style.display = "none";
+    score.style.display = "block"
+  }
   if (!START) {
-    STOPPED = true;
     UP = false;
     enemies = [];
     START = true;
     ALIVE = true;
     BULLETS = [];
+    SCORE = 0;
     player.x = canvas.width / 2;
     player.y = canvas.height / 2;
     player.vx = 0;
@@ -506,6 +523,16 @@ function animateGame() {
     enemies.push(enemy);
   }
 
+  if (
+    enemies[enemies.length - 1].speed_x *
+      enemies[enemies.length - 2].speed_x ===
+    1 && enemies[enemies.length - 1].speed_y *
+    enemies[enemies.length - 2].speed_y ===
+  1
+  ) {
+    enemies[enemies.length - 2].speed_x * -1;
+  }
+
   ALIVE && player.update();
   ALIVE && player.shoot();
 
@@ -518,6 +545,11 @@ function animateGame() {
   explosions.forEach((x) => {
     x.update();
   });
+  score.innerHTML = `SCORE: ${SCORE}`;
+  score_over.innerHTML = `SCORE: ${SCORE}`
+  // document
+  //     .querySelector("#score-board")
+  //     .appendChild(document.createTextNode(`score: ${SCORE}`));
 }
 
 animateGame();

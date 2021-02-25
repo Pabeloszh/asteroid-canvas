@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
     <script src="https://kit.fontawesome.com/4ce82acadb.js" crossorigin="anonymous"></script>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
     <title>Document</title>
 </head>
 <body>
@@ -17,7 +19,15 @@
             <div id="right"><i class="fas fa-caret-right"></i></div>
             <div id="space"><h3>SPACE</h3></div>
         </div>
+        <div class="score-board">
+            <h2 id="score"></h2>
+        </div>
         <canvas id="canvas"></canvas>
+        <div id="info-over">
+            <h1>GAME OVER</h1>
+            <h4 id="score-over"></h4>
+            <p id="again">press space to play again...</p>
+        </div>
     </div>
     
     <script src="script.js"></script>
